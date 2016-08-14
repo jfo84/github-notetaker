@@ -8,6 +8,9 @@ import {
   ActivityIndicatorIOS,
 } from 'react-native';
 
+import api from '../Utils/api';
+import Dashboard from './Dashboard'
+
 var styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
@@ -15,24 +18,24 @@ var styles = StyleSheet.create({
     marginTop: 65,
     flexDirection: 'column',
     justifyContent: 'center',
-    backgroundColor: '#48BBEC'
+    backgroundColor: '#48BBEC',
   },
   title: {
     marginBottom: 20,
     fontSize: 25,
     textAlign: 'center',
-    color: '#fff'
+    color: '#fff',
   },
   searchInput: {
     height: 50,
     padding: 4,
     marginRight: 5,
-    fontSize: 25
+    fontSize: 25,
   },
   buttonText: {
     fontSize: 18,
     color: '#111',
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   button: {
     height: 45,
@@ -44,7 +47,7 @@ var styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 10,
     alignSelf: 'stretch',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
 });
 
@@ -54,7 +57,7 @@ class Main extends Component {
     this.state = {
       username: '',
       isLoading: false,
-      error: false
+      error: false,
     }
   }
 
@@ -70,10 +73,33 @@ class Main extends Component {
     this.setState({
       isLoading: true
     });
+    api.getBio(this.state.username)
+      .then((res) => {
+        if(res.message === 'Not Found') {
+          this.setState({
+            error: 'User not found',
+            isLoading: false,
+          });
+      } else {
+        this.props.navigator.push({
+          title: res.name || 'Select an Option',
+          component: Dashboard,
+          passProps: {userInfo: res},
+        });
+        this.setState({
+          isLoading: false,
+          error: false,
+          username: '',
+        });
+      }
+    });
     console.log('SUBMIT', this.state.username);
   }
 
   render() {
+    var showErr = (
+      this.state.error ? <Text> {this.state.error} </Text> : <View></View>
+    );
     return (
       <View style={styles.mainContainer}>
         <Text style={styles.title}> Search for a Github User </Text>
@@ -87,6 +113,12 @@ class Main extends Component {
           underlayColor="white">
             <Text style={styles.buttonText}> SEARCH </Text>
         </TouchableHighlight>
+        <ActivityIndicatorIOS
+          animating={this.state.isLoading}
+          color='#111'
+          size='large'>
+        </ActivityIndicatorIOS>
+        {showErr}
       </View>
     )
   }
